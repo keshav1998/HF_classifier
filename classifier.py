@@ -1,10 +1,24 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import BitsAndBytesConfig
 import transformers
 import torch
+import logging
+logging.basicConfig(level=logging.INFO)
 
-model = "tiiuae/falcon-7b-instruct"
+model = "falcon-7b-instruct"
 
-tokenizer = AutoTokenizer.from_pretrained(model)
+# tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path=model, local_files_only=True,
+#                                           offload_folder="offload_folder",
+#                                         torch_dtype=torch.float32,
+#                                         trust_remote_code=True,
+#                                         device_map="auto",)
+model = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path=model, 
+                                             local_files_only=True, 
+                                             trust_remote_code=True)
+
+# tokenizer = AutoTokenizer.from_pretrained(model)
+
+logging.info("Model loaded")
 pipeline = transformers.pipeline(
     "text-generation",
     model=model,
@@ -13,8 +27,10 @@ pipeline = transformers.pipeline(
     trust_remote_code=True,
     device_map="auto",
 )
+
+question = """Classify "Cardiac Pathways Corporation" into either of these classes ['Organisation', "Institution', 'Government Body', 'Other']:\n"""
 sequences = pipeline(
-   "Girafatron is obsessed with giraffes, the most glorious animal on the face of this Earth. Giraftron believes all other animals are irrelevant when compared to the glorious majesty of the giraffe.\nDaniel: Hello, Girafatron!\nGirafatron:",
+    question,
     max_length=200,
     do_sample=True,
     top_k=10,
